@@ -17,6 +17,11 @@ defmodule AshMemo.ResourceTest do
 
         attributes do
           uuid_primary_key :id
+          attribute :value, :integer
+        end
+        
+        calculations do
+          calculate :test_calc, :integer, expr(value * 10)
         end
       end
 
@@ -42,6 +47,12 @@ defmodule AshMemo.ResourceTest do
 
         attributes do
           uuid_primary_key :id
+          attribute :value, :integer
+        end
+        
+        calculations do
+          calculate :calc_one, :integer, expr(value * 2)
+          calculate :calc_two, :integer, expr(value * 3)
         end
       end
 
@@ -61,6 +72,11 @@ defmodule AshMemo.ResourceTest do
 
         attributes do
           uuid_primary_key :id
+          attribute :value, :integer
+        end
+        
+        calculations do
+          calculate :default_ttl_calc, :integer, expr(value + 1)
         end
       end
 
@@ -86,6 +102,11 @@ defmodule AshMemo.ResourceTest do
 
         attributes do
           uuid_primary_key :id
+          attribute :value, :integer
+        end
+        
+        calculations do
+          calculate :nil_ttl_calc, :integer, expr(value - 1)
         end
       end
 

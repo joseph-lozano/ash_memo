@@ -31,6 +31,12 @@ defmodule AshMemo.InfoTest do
         
         attributes do
           uuid_primary_key :id
+          attribute :value, :integer
+        end
+        
+        calculations do
+          calculate :calculation_one, :integer, expr(value * 2)
+          calculate :calculation_two, :integer, expr(value * 3)
         end
       end
       
