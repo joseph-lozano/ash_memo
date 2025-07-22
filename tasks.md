@@ -39,7 +39,75 @@
 - [x] Add CacheEntry to domain resources
 - [x] Update example to use AshMemo domain
 
-## Phase 4: Configuration & Supervisor
+## Phase 4: Calculation Wrapper (Always Miss)
+### Task 5.1: Create CachedCalculation Module
+- [x] Create lib/ash_memo/cached_calculation.ex
+- [x] Implement init/1 to store options
+- [x] Update example to show wrapped calculation behavior
+
+### Task 5.2: Implement Calculate (Always Delegate)
+- [x] Implement calculate/3 that always delegates
+- [x] Update example to demonstrate delegation
+
+### Task 5.3: Implement Load Delegation
+- [x] Implement load/3 to delegate to wrapped calculation
+- [x] Add example showing load behavior
+
+## Phase 5: Transformer Integration
+### Task 6.1: Basic Transformer
+- [ ] Create lib/ash_memo/transformers/wrap_calculations.ex
+- [ ] Implement transform/1 to find cached calculations
+- [ ] Update example to show transformer in action
+
+### Task 6.2: Calculation Replacement
+- [ ] Implement logic to replace calculations with wrapper
+- [ ] Add example with cache_calculation on word_count
+
+## Phase 6: Cache Operations (Real Implementation)
+### Task 7.1: Cache Module Structure
+- [x] Create lib/ash_memo/cache.ex with get_many/put_many/touch_many
+- [x] Define return types for batch operations
+- [x] Add single-key wrappers for backwards compatibility
+- [x] Update example to demonstrate cache API
+
+### Task 7.2: Cache Key Generation
+- [x] Implement build_cache_key/3 in Cache module
+- [x] Add example showing cache key format
+
+### Task 7.3: Batch Get Implementation
+- [x] Implement AshMemo.Cache.get_many/1 with single query
+- [x] Update example to show batch lookups
+
+### Task 7.4: Batch Put Implementation
+- [x] Implement AshMemo.Cache.put_many/2 using bulk_create
+- [x] Add example demonstrating bulk cache population
+
+### Task 7.5: Wire Up CachedCalculation for Batch
+- [x] Update calculate/3 to build all cache keys upfront
+- [x] Implement batch lookup and separate hits/misses
+- [x] Calculate all misses together via delegate
+- [x] Batch insert all calculated results
+- [x] Update example to show end-to-end caching
+
+### Task 7.6: Batch Touch Implementation
+- [x] Implement AshMemo.Cache.touch_many/1 using bulk_update
+- [x] Add single async task for all cache hits
+- [x] Add example showing access tracking
+
+## Phase 7: Database Actions
+### Task 8.1: Add Required Actions to CacheEntry
+- [x] Add create :upsert action with upsert? true and upsert_identity :cache_key
+- [x] Add update :touch action with atomic updates
+- [x] Update example to use these actions
+
+### Task 8.2: Migration Generation
+- [x] Ensure migration creates table with cache_key as primary key
+- [x] Ensure migration creates table with byte_size column
+- [x] Add index on expires_at for TTL cleanup
+- [x] Add composite index on (inserted_at, accessed_at) for FIFO/LRU
+- [x] Add example migration file and instructions
+
+## Phase 8: Configuration & Supervisor
 ### Task 4.1: Configuration Module
 - [ ] Create lib/ash_memo/config.ex
 - [ ] Update example config.exs to configure repo for AshMemo
@@ -50,74 +118,6 @@
 - [ ] Add support for max_entries and max_bytes options
 - [ ] Update example application.ex to include AshMemo supervisor
 - [ ] Add example configuration for limits
-
-## Phase 5: Calculation Wrapper (Always Miss)
-### Task 5.1: Create CachedCalculation Module
-- [ ] Create lib/ash_memo/cached_calculation.ex
-- [ ] Implement init/1 to store options
-- [ ] Update example to show wrapped calculation behavior
-
-### Task 5.2: Implement Calculate (Always Delegate)
-- [ ] Implement calculate/3 that always delegates
-- [ ] Update example to demonstrate delegation
-
-### Task 5.3: Implement Load Delegation
-- [ ] Implement load/3 to delegate to wrapped calculation
-- [ ] Add example showing load behavior
-
-## Phase 6: Transformer Integration
-### Task 6.1: Basic Transformer
-- [ ] Create lib/ash_memo/transformers/wrap_calculations.ex
-- [ ] Implement transform/1 to find cached calculations
-- [ ] Update example to show transformer in action
-
-### Task 6.2: Calculation Replacement
-- [ ] Implement logic to replace calculations with wrapper
-- [ ] Add example with cache_calculation on word_count
-
-## Phase 7: Cache Operations (Real Implementation)
-### Task 7.1: Cache Module Structure
-- [ ] Create lib/ash_memo/cache.ex with get_many/put_many/touch_many
-- [ ] Define return types for batch operations
-- [ ] Add single-key wrappers for backwards compatibility
-- [ ] Update example to demonstrate cache API
-
-### Task 7.2: Cache Key Generation
-- [ ] Implement build_cache_key/3 in Cache module
-- [ ] Add example showing cache key format
-
-### Task 7.3: Batch Get Implementation
-- [ ] Implement AshMemo.Cache.get_many/1 with single query
-- [ ] Update example to show batch lookups
-
-### Task 7.4: Batch Put Implementation
-- [ ] Implement AshMemo.Cache.put_many/2 using bulk_create
-- [ ] Add example demonstrating bulk cache population
-
-### Task 7.5: Wire Up CachedCalculation for Batch
-- [ ] Update calculate/3 to build all cache keys upfront
-- [ ] Implement batch lookup and separate hits/misses
-- [ ] Calculate all misses together via delegate
-- [ ] Batch insert all calculated results
-- [ ] Update example to show end-to-end caching
-
-### Task 7.6: Batch Touch Implementation
-- [ ] Implement AshMemo.Cache.touch_many/1 using bulk_update
-- [ ] Add single async task for all cache hits
-- [ ] Add example showing access tracking
-
-## Phase 8: Database Actions
-### Task 8.1: Add Required Actions to CacheEntry
-- [ ] Add create :upsert action with upsert? true and upsert_identity :cache_key
-- [ ] Add update :touch action with atomic updates
-- [ ] Update example to use these actions
-
-### Task 8.2: Migration Generation
-- [ ] Ensure migration creates table with cache_key as primary key
-- [ ] Ensure migration creates table with byte_size column
-- [ ] Add index on expires_at for TTL cleanup
-- [ ] Add composite index on (inserted_at, accessed_at) for FIFO/LRU
-- [ ] Add example migration file and instructions
 
 ## Phase 9: Cleanup Process (Basic)
 ### Task 9.1: Create Cleaner GenServer
@@ -191,8 +191,8 @@
 ## Definition of "Working Software"
 - After Phase 1: Example project compiles with extension
 - After Phase 2: Example uses DSL (no-op)
-- After Phase 5: Example calculations work (no caching)
-- After Phase 7: Example shows basic caching
+- After Phase 4: Example calculations work (no caching)
+- After Phase 5: Example shows basic caching (transformer wires it up)
 - After Phase 9: Example shows TTL cleanup
 - After Phase 10: Example shows size limits
 - After Phase 11: Example is feature-complete
@@ -200,6 +200,14 @@
 
 ## Critical Path
 The minimum tasks to reach a working example:
-1. Phase 1 → 2 → 3 → 4 → 5 → 6 → 7.1-7.6 → 8.1
+1. Phase 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 This gives us an example with calculation caching and batch operations, which demonstrates the core functionality.
+
+## Current Status
+- Phases 1-3: ✓ Complete (Setup, DSL, Cache Entry)
+- Phase 4: ✓ Complete (CachedCalculation implemented)
+- Phase 6: ✓ Complete (Cache operations implemented)
+- Phase 7: ✓ Complete (Database actions and migration)
+- **Phase 5: Next up** (Transformer to wire everything together)
+- Phase 8: Configuration & Supervisor (can be done after core functionality works)
