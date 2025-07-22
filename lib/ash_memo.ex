@@ -1,18 +1,5 @@
 defmodule AshMemo do
   @moduledoc """
-  Documentation for `AshMemo`.
+  AshMemo provides automatic caching for Ash calculations with configurable TTL and eviction strategies.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> AshMemo.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end

@@ -2,10 +2,10 @@
 
 ## Phase 1: Basic Project Setup & Compilation
 ### Task 1.1: Initialize Mix Project
-- [ ] Create mix.exs with basic project structure
-- [ ] Add minimal dependencies (ash, spark)
-- [ ] Ensure `mix compile` works
-- [ ] Create empty lib/ash_memo.ex module
+- [x] Create mix.exs with basic project structure
+- [x] Add minimal dependencies (ash, spark)
+- [x] Ensure `mix compile` works
+- [x] Create empty lib/ash_memo.ex module
 
 ### Task 1.2: Create Minimal DSL Extension
 - [ ] Write failing test for basic DSL extension loading
