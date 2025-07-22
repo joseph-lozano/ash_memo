@@ -21,17 +21,17 @@ defmodule AshMemo.Cache do
   with :miss for not found or expired entries.
   """
   def get_many([], _resource), do: []
-  def get_many(cache_keys, resource) when is_list(cache_keys) do
+  def get_many(cache_keys, _resource) when is_list(cache_keys) do
     
-    repo = AshMemo.Repo.repo_from_resource(resource)
-    cache_resource = AshMemo.CacheRegistry.resource_for_repo(repo)
+    # For now, use AshMemo.CacheEntry directly
+    # Later this will be dynamic based on the resource's repo
     now = DateTime.utc_now()
     
     # Single query to fetch all entries
     entries = 
-      cache_resource
+      AshMemo.CacheEntry
       |> Ash.Query.filter(cache_key in ^cache_keys and (is_nil(expires_at) or expires_at > ^now))
-      |> Ash.read!(repo: repo)
+      |> Ash.read!(domain: AshMemo.Domain)
     
     # Convert to map for O(1) lookup
     entries_by_key = Map.new(entries, fn entry -> {entry.cache_key, entry.value} end)
@@ -46,10 +46,10 @@ defmodule AshMemo.Cache do
   Batch insert/update multiple cache entries.
   """
   def put_many([], _ttl, _resource), do: :ok
-  def put_many(entries, ttl, resource) when is_list(entries) do
+  def put_many(entries, ttl, _resource) when is_list(entries) do
     
-    repo = AshMemo.Repo.repo_from_resource(resource)
-    cache_resource = AshMemo.CacheRegistry.resource_for_repo(repo)
+    # For now, use AshMemo.CacheEntry directly
+    # Later this will be dynamic based on the resource's repo
     
     expires_at = if ttl do
       DateTime.add(DateTime.utc_now(), ttl, :millisecond)
@@ -64,10 +64,10 @@ defmodule AshMemo.Cache do
     
     # Bulk upsert
     Ash.bulk_create!(
-      cache_resource, 
+      AshMemo.CacheEntry, 
       create_data,
       :upsert,
-      repo: repo,
+      domain: AshMemo.Domain,
       upsert?: true,
       upsert_identity: :cache_key,
       upsert_fields: [:value, :byte_size, :expires_at, :accessed_at, :access_count]
@@ -80,17 +80,17 @@ defmodule AshMemo.Cache do
   Batch touch multiple cache entries to update accessed_at and increment access_count.
   """
   def touch_many([], _resource), do: :ok
-  def touch_many(cache_keys, resource) when is_list(cache_keys) do
+  def touch_many(cache_keys, _resource) when is_list(cache_keys) do
     
-    repo = AshMemo.Repo.repo_from_resource(resource)
-    cache_resource = AshMemo.CacheRegistry.resource_for_repo(repo)
+    # For now, use AshMemo.CacheEntry directly
+    # Later this will be dynamic based on the resource's repo
     
-    cache_resource
+    AshMemo.CacheEntry
     |> Ash.Query.filter(cache_key in ^cache_keys)
     |> Ash.bulk_update!(
       :touch,
       %{},
-      repo: repo,
+      domain: AshMemo.Domain,
       strategy: :atomic
     )
     

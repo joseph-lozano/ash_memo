@@ -35,5 +35,5 @@ defmodule AshMemo.Resource do
 
   use Spark.Dsl.Extension,
     sections: [@memo],
-    transformers: []
+    transformers: [AshMemo.Transformers.WrapCalculations]
 end
