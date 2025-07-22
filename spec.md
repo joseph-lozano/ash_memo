@@ -68,7 +68,7 @@ defmodule AshMemo.CacheEntry do
 
   attributes do
     attribute :cache_key, :string, allow_nil?: false, primary_key?: true
-    attribute :value, AshMemo.ErlangTerm
+    attribute :value, Ash.Type.Term
     attribute :byte_size, :integer, allow_nil?: false
     attribute :inserted_at, :utc_datetime_usec, default: &DateTime.utc_now/0
     attribute :expires_at, :utc_datetime_usec, allow_nil?: true
@@ -97,48 +97,28 @@ defmodule AshMemo.CacheEntry do
 end
 ```
 
-### 3. Binary Storage Type (lib/ash_memo/erlang_term.ex)
-Implement an Ecto.Type for storing arbitrary Erlang terms as compressed binaries:
+### 3. Binary Storage Type (Using Ash.Type.Term)
+We'll leverage the built-in `Ash.Type.Term` which already handles storing arbitrary Erlang terms as binaries. We'll create a utility module to provide the byte size calculation functionality:
 
 ```elixir
-defmodule AshMemo.ErlangTerm do
-  use Ecto.Type
-
-  @impl true
-  def type, do: :binary
-
-  @impl true
-  def cast(value), do: {:ok, value}
-
-  @impl true
-  def dump(value) do
-    try do
-      binary = :erlang.term_to_binary(value, [:compressed])
-      {:ok, binary}
-    rescue
-      _ -> :error
-    end
-  end
+defmodule AshMemo.TermUtils do
+  @moduledoc """
+  Utility functions for working with Erlang terms in the cache.
+  """
   
   @doc """
-  Returns the byte size of the dumped binary representation.
+  Returns the byte size of the term when stored as a binary.
+  This is used to track cache entry sizes for eviction policies.
   """
   def byte_size(value) do
-    case dump(value) do
-      {:ok, binary} -> byte_size(binary)
-      :error -> 0
-    end
-  end
-
-  @impl true
-  def load(binary) when is_binary(binary) do
     try do
-      {:ok, :erlang.binary_to_term(binary)}
+      value
+      |> :erlang.term_to_binary()
+      |> byte_size()
     rescue
-      _ -> :error
+      _ -> 0
     end
   end
-  def load(_), do: :error
 end
 ```
 
@@ -211,7 +191,7 @@ defmodule AshMemo.CachedCalculation do
           %{
             cache_key: cache_key,
             value: value,
-            byte_size: AshMemo.ErlangTerm.byte_size(value)
+            byte_size: AshMemo.TermUtils.byte_size(value)
           }
         end)
       

@@ -24,10 +24,9 @@
 - [x] Add example demonstrating introspection of cached calculations
 
 ## Phase 3: Cache Entry Resource (Storage Layer)
-### Task 3.1: Create ErlangTerm Ecto Type
-- [ ] Create lib/ash_memo/erlang_term.ex
-- [ ] Add byte_size/1 function to calculate storage size
-- [ ] Update example to show how byte sizes are tracked
+### Task 3.1: Create Term Utilities
+- [x] Create lib/ash_memo/term_utils.ex with byte_size/1 function
+- [x] Update example to show how byte sizes are tracked using Ash.Type.Term
 
 ### Task 3.2: Define CacheEntry Resource
 - [ ] Create lib/ash_memo/cache_entry.ex with attributes
