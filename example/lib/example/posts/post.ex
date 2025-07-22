@@ -10,6 +10,9 @@ defmodule Example.Posts.Post do
   end
 
   memo do
+    cache_calculation :word_count do
+      ttl :timer.minutes(30)
+    end
   end
 
   attributes do

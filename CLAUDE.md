@@ -5,7 +5,11 @@ As we accomplish tasks, check them off.
 
 I am radically obsessed with having working software at every step
 
-There is an example application in example/. Lets make sure that is always in a working state
+There is an example application in example/. 
+Lets make sure that is always in a working state. Test this with:
+
+  - `mix compile --force --warnings-as-errors`
+  - `mix test`
 
 <!-- usage-rules-start -->
 <!-- usage-rules-header -->
