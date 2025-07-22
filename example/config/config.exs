@@ -1,3 +1,3 @@
 import Config
 
-config :example, ash_domains: [Example.Posts]
+config :example, ash_domains: [Example.Posts, AshMemo.Domain]

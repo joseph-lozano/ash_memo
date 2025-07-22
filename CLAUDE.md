@@ -11,6 +11,14 @@ Lets make sure that is always in a working state. Test this with:
   - `mix compile --force --warnings-as-errors`
   - `mix test`
 
+## IMPORTANT: NO ASH_MEMO CONFIGURATION
+
+**NEVER** add any `:ash_memo` configuration. The repo should be determined dynamically from the resources that use cached calculations, NOT from configuration. This means:
+
+- NO `config :ash_memo, repo: SomeRepo`
+- NO custom configuration modules
+- The repo is discovered using: `Ash.Resource.Info.data_layer/1` and `AshPostgres.DataLayer.Info.repo/1`
+
 <!-- usage-rules-start -->
 <!-- usage-rules-header -->
 # Usage Rules

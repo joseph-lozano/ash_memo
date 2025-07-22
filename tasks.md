@@ -29,15 +29,15 @@
 - [x] Update example to show how byte sizes are tracked using Ash.Type.Term
 
 ### Task 3.2: Define CacheEntry Resource
-- [ ] Create lib/ash_memo/cache_entry.ex with attributes
-- [ ] Add cache_key as single primary key
-- [ ] Add byte_size attribute to track cache entry size
-- [ ] Add CacheEntry to example project's domain
+- [x] Create lib/ash_memo/cache_entry.ex with attributes
+- [x] Add cache_key as single primary key
+- [x] Add byte_size attribute to track cache entry size
+- [x] Add CacheEntry to example project's domain
 
 ### Task 3.3: Create Domain
-- [ ] Create lib/ash_memo/domain.ex
-- [ ] Add CacheEntry to domain resources
-- [ ] Update example to use AshMemo domain
+- [x] Create lib/ash_memo/domain.ex
+- [x] Add CacheEntry to domain resources
+- [x] Update example to use AshMemo domain
 
 ## Phase 4: Configuration & Supervisor
 ### Task 4.1: Configuration Module
