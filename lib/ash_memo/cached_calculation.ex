@@ -50,7 +50,13 @@ defmodule AshMemo.CachedCalculation do
     # Step 4: Handle cache hits (async touch)
     if hits != [] do
       hit_keys = Enum.map(hits, fn {{_, key}, _} -> key end)
-      Task.start(fn -> AshMemo.Cache.touch_many(hit_keys, resource) end)
+      
+      # In test mode or when async is disabled, run synchronously
+      if Application.get_env(:ash, :disable_async?) do
+        AshMemo.Cache.touch_many(hit_keys, resource)
+      else
+        Task.start(fn -> AshMemo.Cache.touch_many(hit_keys, resource) end)
+      end
     end
     
     # Step 5: Calculate misses if any
