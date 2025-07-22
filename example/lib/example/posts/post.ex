@@ -1,11 +1,15 @@
 defmodule Example.Posts.Post do
   use Ash.Resource,
     domain: Example.Posts,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    extensions: [AshMemo.Resource]
 
   postgres do
     table "posts"
     repo Example.Repo
+  end
+
+  memo do
   end
 
   attributes do

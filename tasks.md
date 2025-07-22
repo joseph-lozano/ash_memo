@@ -8,10 +8,10 @@
 - [x] Create empty lib/ash_memo.ex module
 
 ### Task 1.2: Create Minimal DSL Extension
-- [ ] Write failing test for basic DSL extension loading
-- [ ] Create lib/ash_memo/resource.ex with empty Spark.Dsl.Extension
-- [ ] Define memo section with no entities yet
-- [ ] Test that resources can use the extension without errors
+- [x] Write failing test for basic DSL extension loading
+- [x] Create lib/ash_memo/resource.ex with empty Spark.Dsl.Extension
+- [x] Define memo section with no entities yet
+- [x] Test that resources can use the extension without errors
 
 ## Phase 2: DSL Structure (No Functionality)
 ### Task 2.1: Define cache_calculation Entity
