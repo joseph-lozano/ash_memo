@@ -55,13 +55,13 @@
 
 ## Phase 5: Transformer Integration
 ### Task 6.1: Basic Transformer
-- [ ] Create lib/ash_memo/transformers/wrap_calculations.ex
-- [ ] Implement transform/1 to find cached calculations
-- [ ] Update example to show transformer in action
+- [x] Create lib/ash_memo/transformers/wrap_calculations.ex
+- [x] Implement transform/1 to find cached calculations
+- [x] Update example to show transformer in action
 
 ### Task 6.2: Calculation Replacement
-- [ ] Implement logic to replace calculations with wrapper
-- [ ] Add example with cache_calculation on word_count
+- [x] Implement logic to replace calculations with wrapper
+- [x] Add example with cache_calculation on word_count
 
 ## Phase 6: Cache Operations (Real Implementation)
 ### Task 7.1: Cache Module Structure
@@ -207,7 +207,9 @@ This gives us an example with calculation caching and batch operations, which de
 ## Current Status
 - Phases 1-3: ✓ Complete (Setup, DSL, Cache Entry)
 - Phase 4: ✓ Complete (CachedCalculation implemented)
+- Phase 5: ✓ Complete (Transformer integration)
 - Phase 6: ✓ Complete (Cache operations implemented)
 - Phase 7: ✓ Complete (Database actions and migration)
-- **Phase 5: Next up** (Transformer to wire everything together)
-- Phase 8: Configuration & Supervisor (can be done after core functionality works)
+- **Phase 8: Next up** (Configuration & Supervisor)
+- Phase 9: Cleanup Process (Basic TTL cleanup)
+- Phase 10: Size-based Eviction (FIFO + Byte Limits)

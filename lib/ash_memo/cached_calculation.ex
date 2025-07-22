@@ -14,8 +14,12 @@ defmodule AshMemo.CachedCalculation do
   @impl true
   def load(query, opts, context) do
     # Delegate loading to the wrapped calculation
-    delegate = opts[:delegate]
-    delegate.load(query, opts, context)
+    case opts[:delegate] do
+      {delegate_mod, delegate_opts} ->
+        delegate_mod.load(query, delegate_opts, context)
+      nil ->
+        []
+    end
   end
 
   @impl true
@@ -54,7 +58,9 @@ defmodule AshMemo.CachedCalculation do
       []
     else
       miss_records = Enum.map(misses, fn {{record, _}, _} -> record end)
-      calculated_values = opts[:delegate].calculate(miss_records, opts, context)
+      # Call the delegate calculation
+      {delegate_mod, delegate_opts} = opts[:delegate]
+      calculated_values = delegate_mod.calculate(miss_records, delegate_opts, context)
       
       # Step 6: Batch cache the results
       cache_data = 

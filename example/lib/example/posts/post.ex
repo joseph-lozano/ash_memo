@@ -17,7 +17,7 @@ defmodule Example.Posts.Post do
 
   attributes do
     uuid_primary_key :id
-    attribute :content, :string
+    attribute :content, :string, public?: true
     create_timestamp :created_at
     update_timestamp :updated_at
   end

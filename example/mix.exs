@@ -32,7 +32,7 @@ defmodule Example.MixProject do
 
   defp aliases do
     [
-      test: ["ash.setup", "test"]
+      test: ["ash.migrate", "test"]
     ]
   end
 end

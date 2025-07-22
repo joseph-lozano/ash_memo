@@ -18,27 +18,23 @@ defmodule AshMemo.Transformers.WrapCalculations do
     # Get the original calculation
     case Ash.Resource.Info.calculation(dsl_state, calc_name) do
       nil ->
-        Spark.Dsl.Transformer.add_entity(
-          dsl_state,
-          [:calculations],
-          %Ash.Resource.Calculation{
-            name: calc_name,
-            calculation: {AshMemo.CachedCalculation, original: nil, opts: cached_calc}
-          }
-        )
+        # If no calculation exists, we shouldn't add one
+        # Just log a warning and continue
+        IO.warn("Cached calculation #{calc_name} defined but no matching calculation found")
+        dsl_state
 
       original_calc ->
         # Remove the original and add wrapped version
+        opts = Map.merge(Map.from_struct(cached_calc), %{
+          cache_key: calc_name,
+          delegate: original_calc.calculation
+        })
+        
         dsl_state
         |> Spark.Dsl.Transformer.remove_entity([:calculations], &(&1.name == calc_name))
         |> Spark.Dsl.Transformer.add_entity(
           [:calculations],
-          %Ash.Resource.Calculation{
-            original_calc
-            | calculation:
-                {AshMemo.CachedCalculation,
-                 original: original_calc.calculation, opts: cached_calc}
-          }
+          %{original_calc | calculation: {AshMemo.CachedCalculation, opts}}
         )
     end
   end

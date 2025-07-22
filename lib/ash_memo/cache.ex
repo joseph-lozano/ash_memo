@@ -64,13 +64,14 @@ defmodule AshMemo.Cache do
     
     # Bulk upsert
     Ash.bulk_create!(
-      AshMemo.CacheEntry, 
       create_data,
+      AshMemo.CacheEntry, 
       :upsert,
       domain: AshMemo.Domain,
       upsert?: true,
       upsert_identity: :cache_key,
-      upsert_fields: [:value, :byte_size, :expires_at, :accessed_at, :access_count]
+      upsert_fields: [:value, :byte_size, :expires_at, :accessed_at, :access_count],
+      return_errors?: true
     )
     
     :ok

@@ -3,6 +3,10 @@ defmodule Example.Posts.PostTest do
 
   alias Example.Posts.Post
 
+  setup do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Example.Repo)
+  end
+
   describe "word_count calculation" do
     test "returns correct word count for content with multiple words" do
       post = %Post{content: "This is a test post"}
