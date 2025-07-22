@@ -19,9 +19,9 @@
 - [x] Update example Post resource to use cache_calculation DSL
 
 ### Task 2.2: Add Info Module for Introspection
-- [ ] Create lib/ash_memo/info.ex using Spark.Dsl.Fragment
-- [ ] Implement cached_calculations/1 function
-- [ ] Add example demonstrating introspection of cached calculations
+- [x] Create lib/ash_memo/info.ex using Spark.Dsl.Fragment
+- [x] Implement cached_calculations/1 function
+- [x] Add example demonstrating introspection of cached calculations
 
 ## Phase 3: Cache Entry Resource (Storage Layer)
 ### Task 3.1: Create ErlangTerm Ecto Type

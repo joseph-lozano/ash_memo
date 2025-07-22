@@ -14,7 +14,8 @@ defmodule AshMemo.MixProject do
       description: description(),
       docs: docs(),
       source_url: "https://github.com/joseph-lozano/ash_memo",
-      homepage_url: "https://github.com/joseph-lozano/ash_memo"
+      homepage_url: "https://github.com/joseph-lozano/ash_memo",
+      consolidate_protocols: Mix.env() != :test
     ]
   end
 

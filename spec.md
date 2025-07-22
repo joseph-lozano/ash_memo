@@ -47,7 +47,7 @@ defmodule AshMemo.Resource do
   # Define @cache_calculation entity with :name and :ttl options
   # Schema includes:
   #   - cache_resource (default: AshMemo.CacheEntry)
-  #   - ttl (default: 3_600_000 ms = 1 hour)
+  #   - ttl (default: nil = no expiration)
   #   - eviction_strategy (default: :fifo, also supports :lru)
 end
 ```
@@ -71,7 +71,7 @@ defmodule AshMemo.CacheEntry do
     attribute :value, AshMemo.ErlangTerm
     attribute :byte_size, :integer, allow_nil?: false
     attribute :inserted_at, :utc_datetime_usec, default: &DateTime.utc_now/0
-    attribute :expires_at, :utc_datetime_usec, allow_nil?: false
+    attribute :expires_at, :utc_datetime_usec, allow_nil?: true
     attribute :accessed_at, :utc_datetime_usec, default: &DateTime.utc_now/0
     attribute :access_count, :integer, default: 1
   end
@@ -270,7 +270,7 @@ defmodule AshMemo.Cache do
     # Single query to fetch all entries
     entries = 
       AshMemo.CacheEntry
-      |> Ash.Query.filter(cache_key in ^cache_keys and expires_at > ^now)
+      |> Ash.Query.filter(cache_key in ^cache_keys and (is_nil(expires_at) or expires_at > ^now))
       |> Ash.read!()
     
     # Convert to map for O(1) lookup
@@ -288,7 +288,11 @@ defmodule AshMemo.Cache do
   def put_many(entries, ttl) when is_list(entries) do
     return :ok if entries == []
     
-    expires_at = DateTime.add(DateTime.utc_now(), ttl, :millisecond)
+    expires_at = if ttl do
+      DateTime.add(DateTime.utc_now(), ttl, :millisecond)
+    else
+      nil
+    end
     
     # Add expires_at to all entries
     create_data = Enum.map(entries, fn entry ->
@@ -402,10 +406,10 @@ defmodule AshMemo.Cleaner do
 
   @impl true
   def handle_info(:ttl_cleanup, state) do
-    # Delete expired entries
+    # Delete expired entries (only those with non-nil expires_at)
     query = 
       AshMemo.CacheEntry
-      |> Ash.Query.filter(expires_at < ^DateTime.utc_now())
+      |> Ash.Query.filter(not is_nil(expires_at) and expires_at < ^DateTime.utc_now())
       |> Ash.Query.limit(state.batch_size)
     
     Ash.bulk_destroy(query, :destroy, %{}, strategy: :atomic)

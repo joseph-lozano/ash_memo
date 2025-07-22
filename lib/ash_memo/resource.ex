@@ -17,10 +17,10 @@ defmodule AshMemo.Resource do
         doc: "The name of the calculation to cache"
       ],
       ttl: [
-        type: :integer,
+        type: {:or, [:integer, {:literal, nil}]},
         required: false,
-        default: 3_600_000,
-        doc: "Time-to-live for cached values in milliseconds. Use :timer functions like :timer.minutes(30)"
+        default: nil,
+        doc: "Time-to-live for cached values in milliseconds. Use :timer functions like :timer.minutes(30). Defaults to nil (no expiration)."
       ]
     ]
   }
