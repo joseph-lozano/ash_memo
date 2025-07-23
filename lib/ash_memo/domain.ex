@@ -5,12 +5,12 @@ defmodule AshMemo.Domain do
 
   @moduledoc """
   Domain for AshMemo cache entry resources.
-  
+
   This domain exists solely to allow AshPostgres to discover
   cache entry resources for migration generation.
   """
 
   resources do
-    resource AshMemo.CacheEntry
+    resource(AshMemo.CacheEntry)
   end
 end

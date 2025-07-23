@@ -95,7 +95,7 @@ defmodule MyLibrary.Dsl do
       option: [type: :string, default: "default", doc: "An option that does X"]
     ]
   }
-  
+
   @my_section %Spark.Dsl.Section{
     name: :my_section,
     describe: ...,
@@ -105,7 +105,7 @@ defmodule MyLibrary.Dsl do
     ],
     entities: [@my_entity]
   }
-  
+
   use Spark.Dsl.Extension, sections: [@my_section]
 end
 
@@ -120,7 +120,7 @@ end
 
 # Step 2: Create the DSL module
 defmodule MyLibrary do
-  use Spark.Dsl, 
+  use Spark.Dsl,
     default_extensions: [
       extensions: [MyLibrary.Dsl]
     ]
@@ -129,7 +129,7 @@ end
 # Step 3: Use the DSL
 defmodule MyApp.Example do
   use MyLibrary
-  
+
   my_section do
     my_entity :example_name do
       option "custom value"
@@ -148,13 +148,13 @@ Transformers modify the DSL at compile time:
 ```elixir
 defmodule MyLibrary.Transformers.AddDefaults do
   use Spark.Dsl.Transformer
-  
+
   def transform(dsl_state) do
     # Add a default entity if none exist
     entities = Spark.Dsl.Extension.get_entities(dsl_state, [:my_section])
-    
+
     if Enum.empty?(entities) do
-      {:ok, 
+      {:ok,
        Spark.Dsl.Transformer.add_entity(
          dsl_state,
          [:my_section],
@@ -164,7 +164,7 @@ defmodule MyLibrary.Transformers.AddDefaults do
       {:ok, dsl_state}
     end
   end
-  
+
   # Control execution order
   def after?(_), do: false
   def before?(OtherTransformer), do: true
@@ -179,11 +179,11 @@ Verifiers validate the final DSL state:
 ```elixir
 defmodule MyLibrary.Verifiers.UniqueNames do
   use Spark.Dsl.Verifier
-  
+
   def verify(dsl_state) do
     entities = Spark.Dsl.Extension.get_entities(dsl_state, [:my_section])
     names = Enum.map(entities, & &1.name)
-    
+
     if length(names) == length(Enum.uniq(names)) do
       :ok
     else
@@ -203,6 +203,7 @@ end
 Spark provides an Info Generator system for introspection of DSL-defined modules. All introspection should go through info modules rather than accessing DSL state directly.
 
 ### 1. Info Module Generation
+
 ```elixir
 # Define an info module for your extension
 defmodule MyLibrary.Info do
@@ -224,6 +225,7 @@ required_option = MyLibrary.Info.my_section_option!(MyApp.Example, :required)
 ```
 
 Benefits of using info modules:
+
 - **Type Safety**: Generated functions provide compile-time guarantees
 - **Performance**: Info data is cached and optimized for runtime access
 - **Consistency**: Standardized API across all Spark-based libraries
@@ -284,6 +286,7 @@ schema = [
 ### 2. Error Handling
 
 Always provide context in errors:
+
 ```elixir
 {:error,
  Spark.Error.DslError.exception(
@@ -296,6 +299,7 @@ Always provide context in errors:
 ## Common Gotchas
 
 ### 1. Compilation Deadlocks
+
 ```elixir
 # WRONG - Causes deadlock
 def transform(dsl_state) do
@@ -311,6 +315,7 @@ end
 ```
 
 ### 2. Extension Order
+
 - Extensions are processed in order
 - Later extensions can modify earlier ones
 - Use transformer ordering for dependencies
@@ -335,12 +340,14 @@ end
 ## Summary
 
 Spark enables:
+
 - Clean, declarative DSL syntax
 - Compile-time validation and transformation
 - Extensible architecture
 - Excellent developer experience
 
 When coding with Spark:
+
 1. Think in terms of entities, sections, and extensions
 2. Leverage compile-time processing for validation
 3. Use transformers for complex logic

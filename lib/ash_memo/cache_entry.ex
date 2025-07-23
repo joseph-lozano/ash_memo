@@ -46,14 +46,14 @@ defmodule AshMemo.CacheEntry do
   end
 
   identities do
-    identity :cache_key, [:cache_key]
+    identity(:cache_key, [:cache_key])
   end
 
   actions do
     defaults([:read, :destroy])
 
     create :upsert do
-      accept [:cache_key, :value, :byte_size, :expires_at, :accessed_at, :access_count]
+      accept([:cache_key, :value, :byte_size, :expires_at, :accessed_at, :access_count])
       upsert?(true)
       upsert_identity(:cache_key)
     end
@@ -64,4 +64,3 @@ defmodule AshMemo.CacheEntry do
     end
   end
 end
-

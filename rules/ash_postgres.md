@@ -158,7 +158,7 @@ For development iterations, use the dev workflow to avoid naming migrations prem
 3. Review the migrations and run `mix ash.migrate` to run them
 4. Continue making changes and running `mix ash.codegen --dev` as needed
 5. When your feature is complete, run `mix ash.codegen add_feature_name` to generate final named migrations (this will rollback dev migrations and squash them)
-3. Review the migrations and run `mix ash.migrate` to run them
+6. Review the migrations and run `mix ash.migrate` to run them
 
 ### Traditional Migration Generation
 
@@ -300,12 +300,14 @@ end
 ## Best Practices
 
 1. **Organize migrations**: Run `mix ash.codegen` after each meaningful set of resource changes with a descriptive name:
+
    ```bash
    mix ash.codegen --name add_user_roles
    mix ash.codegen --name implement_post_tagging
    ```
 
 2. **Use check constraints for domain invariants**: Enforce data integrity at the database level:
+
    ```elixir
    check_constraints do
      check_constraint :valid_status, check: "status IN ('pending', 'active', 'completed')"

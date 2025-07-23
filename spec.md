@@ -1,9 +1,11 @@
 # AshMemo Implementation Specification
 
 ## Overview
+
 Build an Elixir library called AshMemo that extends the Ash framework to provide caching for calculations. The library intercepts calculation execution to cache results in PostgreSQL with configurable TTL and eviction strategies.
 
 ## Core Requirements
+
 - **Name**: ash_memo (package name), AshMemo (module namespace)
 - **Purpose**: Cache Ash calculation results with opt-in configuration per calculation
 - **Storage**: PostgreSQL table with single string cache key for efficient batch operations
@@ -11,6 +13,7 @@ Build an Elixir library called AshMemo that extends the Ash framework to provide
 - **Integration**: Users add AshMemo.Supervisor to supervision tree and AshMemo.Domain to ash_domains config
 
 ## Project Structure
+
 ```
 ash_memo/
 ├── lib/
@@ -36,6 +39,7 @@ ash_memo/
 ## Key Implementation Details
 
 ### 1. DSL Extension (lib/ash_memo/resource.ex)
+
 Create a Spark.Dsl.Extension that adds a `:memo` section with the following structure:
 
 ```elixir
@@ -53,6 +57,7 @@ end
 ```
 
 ### 2. Database Schema (lib/ash_memo/cache_entry.ex)
+
 Define an Ash resource with AshPostgres data layer for cache storage:
 
 ```elixir
@@ -78,12 +83,12 @@ defmodule AshMemo.CacheEntry do
 
   actions do
     defaults [:read, :destroy]
-    
+
     create :upsert do
       upsert? true
       upsert_identity :cache_key
     end
-    
+
     update :touch do
       change set_attribute(:accessed_at, &DateTime.utc_now/0)
       change increment(:access_count)
@@ -98,6 +103,7 @@ end
 ```
 
 ### 3. Binary Storage Type (Using Ash.Type.Term)
+
 We'll leverage the built-in `Ash.Type.Term` which already handles storing arbitrary Erlang terms as binaries. We'll create a utility module to provide the byte size calculation functionality:
 
 ```elixir
@@ -105,7 +111,7 @@ defmodule AshMemo.TermUtils do
   @moduledoc """
   Utility functions for working with Erlang terms in the cache.
   """
-  
+
   @doc """
   Returns the byte size of the term when stored as a binary.
   This is used to track cache entry sizes for eviction policies.
@@ -123,6 +129,7 @@ end
 ```
 
 ### 4. Calculation Wrapper (lib/ash_memo/cached_calculation.ex)
+
 Wrap calculations to add caching behavior with efficient batch operations:
 
 ```elixir
@@ -149,42 +156,42 @@ defmodule AshMemo.CachedCalculation do
   @impl true
   def calculate(records, opts, context) do
     return [] if records == []
-    
+
     resource = List.first(records).__struct__
     calculation_name = opts[:cache_key]
-    
+
     # Step 1: Build cache keys for all records
     cache_entries = Enum.map(records, fn record ->
       cache_key = AshMemo.Cache.build_cache_key(resource, record, calculation_name)
       {record, cache_key}
     end)
-    
+
     cache_keys = Enum.map(cache_entries, &elem(&1, 1))
-    
+
     # Step 2: Batch lookup all cache entries
     cached_values = AshMemo.Cache.get_many(cache_keys)
-    
+
     # Step 3: Separate hits and misses
-    {hits, misses} = 
+    {hits, misses} =
       cache_entries
       |> Enum.zip(cached_values)
       |> Enum.split_with(fn {_, value} -> value != :miss end)
-    
+
     # Step 4: Handle cache hits (async touch)
     if hits != [] do
       hit_keys = Enum.map(hits, fn {{_, key}, _} -> key end)
       Task.start(fn -> AshMemo.Cache.touch_many(hit_keys) end)
     end
-    
+
     # Step 5: Calculate misses if any
     miss_results = if misses == [] do
       []
     else
       miss_records = Enum.map(misses, fn {{record, _}, _} -> record end)
       calculated_values = opts[:delegate].calculate(miss_records, opts, context)
-      
+
       # Step 6: Batch cache the results
-      cache_data = 
+      cache_data =
         misses
         |> Enum.zip(calculated_values)
         |> Enum.map(fn {{{_, cache_key}, _}, value} ->
@@ -194,18 +201,18 @@ defmodule AshMemo.CachedCalculation do
             byte_size: AshMemo.TermUtils.byte_size(value)
           }
         end)
-      
+
       AshMemo.Cache.put_many(cache_data, opts[:ttl])
-      
+
       # Return tuples of record and calculated value
       misses
       |> Enum.zip(calculated_values)
       |> Enum.map(fn {{{record, _}, _}, value} -> {record, value} end)
     end
-    
+
     # Step 7: Build result map for efficient lookup
     result_map = Map.new(miss_results)
-    
+
     # Step 8: Assemble final results in original order
     Enum.map(records, fn record ->
       case Enum.find(hits, fn {{r, _}, _} -> r == record end) do
@@ -218,6 +225,7 @@ end
 ```
 
 ### 5. Cache Operations (lib/ash_memo/cache.ex)
+
 Core caching logic with batch operations support:
 
 ```elixir
@@ -228,13 +236,13 @@ defmodule AshMemo.Cache do
   """
   def build_cache_key(resource, record, calculation_name) do
     resource_name = inspect(resource)
-    
-    primary_key = 
+
+    primary_key =
       resource
       |> Ash.Resource.Info.primary_key()
       |> Enum.map(fn key -> Map.get(record, key) end)
       |> Enum.join(":")
-    
+
     "#{resource_name}:#{primary_key}:#{calculation_name}"
   end
 
@@ -244,18 +252,18 @@ defmodule AshMemo.Cache do
   """
   def get_many(cache_keys) when is_list(cache_keys) do
     return [] if cache_keys == []
-    
+
     now = DateTime.utc_now()
-    
+
     # Single query to fetch all entries
-    entries = 
+    entries =
       AshMemo.CacheEntry
       |> Ash.Query.filter(cache_key in ^cache_keys and (is_nil(expires_at) or expires_at > ^now))
       |> Ash.read!()
-    
+
     # Convert to map for O(1) lookup
     entries_by_key = Map.new(entries, fn entry -> {entry.cache_key, entry.value} end)
-    
+
     # Return results in same order as input, with :miss for not found
     Enum.map(cache_keys, fn key ->
       Map.get(entries_by_key, key, :miss)
@@ -267,28 +275,28 @@ defmodule AshMemo.Cache do
   """
   def put_many(entries, ttl) when is_list(entries) do
     return :ok if entries == []
-    
+
     expires_at = if ttl do
       DateTime.add(DateTime.utc_now(), ttl, :millisecond)
     else
       nil
     end
-    
+
     # Add expires_at to all entries
     create_data = Enum.map(entries, fn entry ->
       Map.put(entry, :expires_at, expires_at)
     end)
-    
+
     # Bulk upsert
     Ash.bulk_create!(
-      AshMemo.CacheEntry, 
+      AshMemo.CacheEntry,
       create_data,
       :upsert,
       upsert?: true,
       upsert_identity: :cache_key,
       upsert_fields: [:value, :byte_size, :expires_at, :accessed_at, :access_count]
     )
-    
+
     :ok
   end
 
@@ -297,7 +305,7 @@ defmodule AshMemo.Cache do
   """
   def touch_many(cache_keys) when is_list(cache_keys) do
     return :ok if cache_keys == []
-    
+
     AshMemo.CacheEntry
     |> Ash.Query.filter(cache_key in ^cache_keys)
     |> Ash.bulk_update!(
@@ -309,22 +317,23 @@ defmodule AshMemo.Cache do
         access_count: expr(access_count + 1)
       }
     )
-    
+
     :ok
   end
 
   # Single-key operations (for backwards compatibility if needed)
   def get(cache_key), do: get_many([cache_key]) |> List.first()
-  
+
   def put(cache_key, value, byte_size, ttl) do
     put_many([%{cache_key: cache_key, value: value, byte_size: byte_size}], ttl)
   end
-  
+
   def touch(cache_key), do: touch_many([cache_key])
 end
 ```
 
 ### 6. Transformer (lib/ash_memo/transformers/wrap_calculations.ex)
+
 Transform calculations to use caching wrapper:
 
 ```elixir
@@ -334,25 +343,25 @@ defmodule AshMemo.Transformers.WrapCalculations do
   @impl true
   def transform(dsl) do
     cached_calculations = AshMemo.Info.cached_calculations(dsl)
-    
+
     Enum.reduce_while(cached_calculations, {:ok, dsl}, fn cached_calc, {:ok, dsl} ->
       calculation_name = cached_calc.name
       original_calc = Ash.Resource.Info.calculation(dsl, calculation_name)
-      
+
       wrapped_opts = [
         delegate: original_calc.calculation,
         ttl: cached_calc.ttl,
         eviction_strategy: cached_calc.eviction_strategy,
         cache_key: calculation_name
       ]
-      
+
       # Replace calculation with wrapped version
       dsl = Ash.Resource.Builder.replace_calculation(
         dsl,
-        calculation_name, 
+        calculation_name,
         {AshMemo.CachedCalculation, wrapped_opts}
       )
-      
+
       {:cont, {:ok, dsl}}
     end)
   end
@@ -360,6 +369,7 @@ end
 ```
 
 ### 7. Background Cleanup (lib/ash_memo/cleaner.ex)
+
 GenServer for periodic cache maintenance:
 
 ```elixir
@@ -376,7 +386,7 @@ defmodule AshMemo.Cleaner do
     Process.send_after(self(), :ttl_cleanup, :timer.minutes(15))
     # Schedule size cleanup every hour
     Process.send_after(self(), :size_cleanup, :timer.hours(1))
-    
+
     {:ok, %{
       max_entries: opts[:max_entries] || :unlimited,
       max_bytes: opts[:max_bytes] || 256 * 1024 * 1024, # 256MB default
@@ -387,13 +397,13 @@ defmodule AshMemo.Cleaner do
   @impl true
   def handle_info(:ttl_cleanup, state) do
     # Delete expired entries (only those with non-nil expires_at)
-    query = 
+    query =
       AshMemo.CacheEntry
       |> Ash.Query.filter(not is_nil(expires_at) and expires_at < ^DateTime.utc_now())
       |> Ash.Query.limit(state.batch_size)
-    
+
     Ash.bulk_destroy(query, :destroy, %{}, strategy: :atomic)
-    
+
     # Reschedule
     Process.send_after(self(), :ttl_cleanup, :timer.minutes(15))
     {:noreply, state}
@@ -403,11 +413,11 @@ defmodule AshMemo.Cleaner do
   def handle_info(:size_cleanup, state) do
     # Check both entry count and total byte size
     stats = get_cache_stats()
-    
-    needs_eviction = 
+
+    needs_eviction =
       (state.max_entries != :unlimited && stats.count > state.max_entries) ||
       (state.max_bytes != :unlimited && stats.total_bytes > state.max_bytes)
-    
+
     if needs_eviction do
       # Calculate how much to evict (10% of entries or enough to get under byte limit)
       entries_to_evict = if state.max_entries != :unlimited do
@@ -415,21 +425,21 @@ defmodule AshMemo.Cleaner do
       else
         100  # Default batch size when only byte limit is set
       end
-      
+
       bytes_to_evict = if state.max_bytes != :unlimited && stats.total_bytes > state.max_bytes do
         stats.total_bytes - state.max_bytes
       else
         0
       end
-      
+
       evict_entries(entries_to_evict, bytes_to_evict)
     end
-    
+
     # Reschedule
     Process.send_after(self(), :size_cleanup, :timer.hours(1))
     {:noreply, state}
   end
-  
+
   defp get_cache_stats do
     # Get count and sum of byte sizes
     AshMemo.CacheEntry
@@ -443,12 +453,12 @@ defmodule AshMemo.Cleaner do
       stats -> stats
     end
   end
-  
+
   defp evict_entries(min_entries, min_bytes) do
-    query = 
+    query =
       AshMemo.CacheEntry
       |> Ash.Query.sort([:inserted_at, :accessed_at])  # FIFO primary, LRU secondary
-    
+
     # If we need to evict based on bytes, fetch entries until we've evicted enough
     if min_bytes > 0 do
       evict_until_bytes_freed(query, min_bytes, min_entries)
@@ -459,36 +469,36 @@ defmodule AshMemo.Cleaner do
       |> Ash.bulk_destroy(:destroy, %{}, strategy: :atomic)
     end
   end
-  
+
   defp evict_until_bytes_freed(query, bytes_needed, min_entries, offset \\ 0, bytes_freed \\ 0) do
     batch_size = 100
-    
-    batch_query = 
+
+    batch_query =
       query
       |> Ash.Query.offset(offset)
       |> Ash.Query.limit(batch_size)
-    
+
     entries = Ash.read!(batch_query)
-    
+
     if Enum.empty?(entries) || (bytes_freed >= bytes_needed && offset >= min_entries) do
       # We're done
       :ok
     else
       # Calculate bytes in this batch
       batch_bytes = Enum.sum(Enum.map(entries, & &1.byte_size))
-      
+
       # Delete this batch
       cache_keys = Enum.map(entries, & &1.cache_key)
       AshMemo.CacheEntry
       |> Ash.Query.filter(cache_key in ^cache_keys)
       |> Ash.bulk_destroy(:destroy, %{}, strategy: :atomic)
-      
+
       # Continue if needed
       evict_until_bytes_freed(
-        query, 
-        bytes_needed, 
-        min_entries, 
-        offset + batch_size, 
+        query,
+        bytes_needed,
+        min_entries,
+        offset + batch_size,
         bytes_freed + batch_bytes
       )
     end
@@ -497,6 +507,7 @@ end
 ```
 
 ### 8. Configuration (lib/ash_memo/config.ex)
+
 Configuration helpers with clear error messages:
 
 ```elixir
@@ -511,7 +522,7 @@ defmodule AshMemo.Config do
 
             config :ash_memo, repo: YourApp.Repo
         """
-        
+
       repo -> repo
     end
   end
@@ -519,6 +530,7 @@ end
 ```
 
 ### 9. Domain (lib/ash_memo/domain.ex)
+
 Simple domain definition for the cache resources:
 
 ```elixir
@@ -533,6 +545,7 @@ end
 ```
 
 ### 10. Mix Configuration
+
 Mix project configuration with proper dependencies:
 
 ```elixir
@@ -584,7 +597,7 @@ Users can configure global cache limits when starting the supervisor:
 ```elixir
 children = [
   # ... other children
-  {AshMemo.Supervisor, 
+  {AshMemo.Supervisor,
     max_entries: 50_000,      # Maximum number of cache entries (default: :unlimited)
     max_bytes: 512 * 1024 * 1024  # Maximum cache size in bytes (default: 256MB)
   }
@@ -592,6 +605,7 @@ children = [
 ```
 
 Configuration options:
+
 - `max_entries`: Maximum number of cache entries. Defaults to `:unlimited`
 - `max_bytes`: Maximum total size of cache in bytes. Defaults to `268_435_456` (256MB)
 - `batch_size`: Batch size for cleanup operations. Defaults to `1000`
@@ -599,15 +613,17 @@ Configuration options:
 When cache limits are exceeded, the cleaner will evict entries using FIFO strategy (oldest `inserted_at` first, with `accessed_at` as secondary sort for LRU behavior).
 
 ## Installation Instructions for Users
+
 1. Add `{:ash_memo, "~> 0.1.0"}` to deps
 2. Configure repo: `config :ash_memo, repo: MyApp.Repo`
 3. Add to supervision tree: `children = [..., AshMemo.Supervisor]` (or with options as shown above)
 4. Add to ash domains: `config :my_app, ash_domains: [..., AshMemo.Domain]`
 5. Run `mix ash.codegen` and `mix ecto.migrate`
 6. Use in resources:
+
    ```elixir
    use Ash.Resource, extensions: [AshMemo.Resource]
-   
+
    memo do
      cache_calculation :expensive_calculation do
        ttl :timer.minutes(30)
@@ -616,6 +632,7 @@ When cache limits are exceeded, the cleaner will evict entries using FIFO strate
    ```
 
 ## Testing Considerations
+
 - Test cache hit/miss scenarios
 - Test TTL expiration
 - Test FIFO eviction when table exceeds max size
@@ -623,6 +640,7 @@ When cache limits are exceeded, the cleaner will evict entries using FIFO strate
 - Benchmark performance improvements
 
 ## Important Notes
+
 - Do NOT use UNLOGGED tables (breaks read replicas)
 - Use dynamic repo lookup via module function
 - Ensure transformer only wraps calculations explicitly marked for caching
@@ -630,6 +648,7 @@ When cache limits are exceeded, the cleaner will evict entries using FIFO strate
 - Use Task.start for async operations to avoid blocking
 
 ## Future Enhancements (v1)
+
 - Detect Oban availability and use for scheduling if present
 - Add LRU eviction strategy using accessed_at and access_count
 - Add telemetry events for monitoring

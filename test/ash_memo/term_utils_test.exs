@@ -46,7 +46,7 @@ defmodule AshMemo.TermUtilsTest do
           tags: [:important, :verified]
         }
       }
-      
+
       size = AshMemo.TermUtils.byte_size(data)
       assert size > 100
     end

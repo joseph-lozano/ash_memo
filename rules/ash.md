@@ -2,7 +2,7 @@
 
 ## Understanding Ash
 
-Ash is an opinionated, composable framework for building applications in Elixir. It provides a declarative approach to modeling your domain with resources at the center. Read documentation  *before* attempting to use it's features. Do not assume that you have prior knowledge of the framework or its conventions.
+Ash is an opinionated, composable framework for building applications in Elixir. It provides a declarative approach to modeling your domain with resources at the center. Read documentation _before_ attempting to use it's features. Do not assume that you have prior knowledge of the framework or its conventions.
 
 ## Code Structure & Organization
 
@@ -128,6 +128,7 @@ For each action defined in a code interface, Ash automatically generates corresp
 - `can_action_name(actor, params \\ %{}, opts \\ [])` - Returns `{:ok, true/false}` or `{:error, reason}`
 
 Example usage:
+
 ```elixir
 # Check if user can create a post
 if MyApp.Blog.can_create_post?(current_user) do
@@ -162,7 +163,7 @@ These functions are particularly useful for conditional rendering of UI elements
 - Use changes to modify changesets before execution
 - Use validations to validate changesets before execution
 - Prefer domain code interfaces to call actions instead of directly building queries/changesets and calling functions in the `Ash` module
-- A resource could be *only generic actions*. This can be useful when you are using a resource only to model behavior.
+- A resource could be _only generic actions_. This can be useful when you are using a resource only to model behavior.
 
 ## Querying Data
 
@@ -215,6 +216,7 @@ These error classes help you catch and handle errors at an appropriate level of 
 Validations ensure that data meets your business requirements before it gets processed by an action. Unlike changes, validations cannot modify the changeset - they can only validate it or add errors.
 
 Validations work on both changesets and queries. Built-in validations that support queries include:
+
 - `action_is`, `argument_does_not_equal`, `argument_equals`, `argument_in`
 - `compare`, `confirm`, `match`, `negate`, `one_of`, `present`, `string_length`
 - Custom validations that implement the `supports/1` callback
@@ -244,7 +246,7 @@ actions do
   create :sign_up do
     validate present([:email, :password])  # Only for this action
   end
-  
+
   read :search do
     argument :email, :string
     validate match(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/)  # Validates query arguments
@@ -257,6 +259,7 @@ end
 ```
 
 - Create **custom validation modules** for complex validation logic:
+
   ```elixir
   defmodule MyApp.Validations.UniqueUsername do
     use Ash.Resource.Validation
@@ -364,6 +367,7 @@ end
 ```
 
 - **Avoid redundant validations** - Don't add validations that duplicate attribute constraints:
+
   ```elixir
   # WRONG - redundant validation
   attribute :name, :string do
@@ -414,6 +418,7 @@ end
 ```
 
 - Create **custom change modules** for reusable transformation logic:
+
   ```elixir
   defmodule MyApp.Changes.SlugifyTitle do
     use Ash.Resource.Change
@@ -605,6 +610,7 @@ MyApp.Post
 There are two primary ways to manage relationships in Ash:
 
 #### 1. Using `change manage_relationship/2-3` in Actions
+
 Use this when input comes from action arguments:
 
 ```elixir
@@ -627,6 +633,7 @@ end
 ```
 
 #### 2. Using `Ash.Changeset.manage_relationship/3-4` in Custom Changes
+
 Use this when building values programmatically:
 
 ```elixir
@@ -647,6 +654,7 @@ end
 ```
 
 #### Quick Reference - Management Types
+
 - `:append` - Add new related records, ignore existing
 - `:append_and_remove` - Add new related records, remove missing
 - `:remove` - Remove specified related records
@@ -654,6 +662,7 @@ end
 - `:create` - Only create new records
 
 #### Quick Reference - Common Options
+
 - `on_lookup: :relate` - Look up and relate existing records
 - `on_no_match: :create` - Create if no match found
 - `on_match: :update` - Update existing matches
@@ -665,6 +674,7 @@ For comprehensive documentation, see the [Managing Relationships](https://hexdoc
 #### Examples
 
 Creating a post with tags:
+
 ```elixir
 MyDomain.create_post!(%{
   title: "New Post",
@@ -823,6 +833,7 @@ end
 ```
 
 Alternative patterns for AND logic:
+
 - Use multiple separate policies (each must pass independently)
 - Use a single complex expression with `expr(condition1 and condition2)`
 - Use `forbid_unless` for required conditions, then `authorize_if` for the final check
@@ -1125,6 +1136,7 @@ calculate :grade_percentage, :decimal, expr(
 ## Testing
 
 When testing resources:
+
 - Test your domain actions through the code interface
 - Use test utilities in `Ash.Test`
 - Test authorization policies work as expected using `Ash.can?`

@@ -25,11 +25,12 @@ defmodule AshMemo.Transformers.WrapCalculations do
 
       original_calc ->
         # Remove the original and add wrapped version
-        opts = Map.merge(Map.from_struct(cached_calc), %{
-          cache_key: calc_name,
-          delegate: original_calc.calculation
-        })
-        
+        opts =
+          Map.merge(Map.from_struct(cached_calc), %{
+            cache_key: calc_name,
+            delegate: original_calc.calculation
+          })
+
         dsl_state
         |> Spark.Dsl.Transformer.remove_entity([:calculations], &(&1.name == calc_name))
         |> Spark.Dsl.Transformer.add_entity(
@@ -39,4 +40,3 @@ defmodule AshMemo.Transformers.WrapCalculations do
     end
   end
 end
-

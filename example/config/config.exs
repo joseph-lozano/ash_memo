@@ -1,6 +1,6 @@
 import Config
 
-config :example, 
+config :example,
   ash_domains: [Example.Posts, AshMemo.Domain],
   ecto_repos: [Example.Repo]
 

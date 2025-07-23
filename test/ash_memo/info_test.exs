@@ -9,7 +9,7 @@ defmodule AshMemo.InfoTest do
           data_layer: Ash.DataLayer.Ets
 
         attributes do
-          uuid_primary_key :id
+          uuid_primary_key(:id)
         end
       end
 
@@ -28,7 +28,7 @@ defmodule AshMemo.InfoTest do
         end
 
         attributes do
-          uuid_primary_key :id
+          uuid_primary_key(:id)
         end
       end
 
@@ -44,32 +44,32 @@ defmodule AshMemo.InfoTest do
 
         memo do
           cache_calculation :short_ttl do
-            ttl :timer.seconds(30)
+            ttl(:timer.seconds(30))
           end
 
           cache_calculation :long_ttl do
-            ttl :timer.hours(24 * 7)
+            ttl(:timer.hours(24 * 7))
           end
         end
 
         attributes do
-          uuid_primary_key :id
-          attribute :value, :integer
+          uuid_primary_key(:id)
+          attribute(:value, :integer)
         end
-        
+
         calculations do
-          calculate :short_ttl, :integer, expr(value * 5)
-          calculate :long_ttl, :integer, expr(value * 10)
+          calculate(:short_ttl, :integer, expr(value * 5))
+          calculate(:long_ttl, :integer, expr(value * 10))
         end
       end
 
       cached_calcs = AshMemo.Info.cached_calculations(ConfiguredResource)
-      
+
       assert length(cached_calcs) == 2
-      
+
       short_ttl = Enum.find(cached_calcs, &(&1.name == :short_ttl))
       long_ttl = Enum.find(cached_calcs, &(&1.name == :long_ttl))
-      
+
       assert short_ttl.ttl == :timer.seconds(30)
       assert long_ttl.ttl == :timer.hours(24 * 7)
     end

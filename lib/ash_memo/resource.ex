@@ -20,7 +20,8 @@ defmodule AshMemo.Resource do
         type: {:or, [:integer, {:literal, nil}]},
         required: false,
         default: nil,
-        doc: "Time-to-live for cached values in milliseconds. Use :timer functions like :timer.minutes(30). Defaults to nil (no expiration)."
+        doc:
+          "Time-to-live for cached values in milliseconds. Use :timer functions like :timer.minutes(30). Defaults to nil (no expiration)."
       ]
     ]
   }

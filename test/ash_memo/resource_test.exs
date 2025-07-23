@@ -11,17 +11,17 @@ defmodule AshMemo.ResourceTest do
 
         memo do
           cache_calculation :test_calc do
-            ttl :timer.minutes(5)
+            ttl(:timer.minutes(5))
           end
         end
 
         attributes do
-          uuid_primary_key :id
-          attribute :value, :integer
+          uuid_primary_key(:id)
+          attribute(:value, :integer)
         end
-        
+
         calculations do
-          calculate :test_calc, :integer, expr(value * 10)
+          calculate(:test_calc, :integer, expr(value * 10))
         end
       end
 
@@ -37,22 +37,22 @@ defmodule AshMemo.ResourceTest do
 
         memo do
           cache_calculation :calc_one do
-            ttl :timer.minutes(10)
+            ttl(:timer.minutes(10))
           end
 
           cache_calculation :calc_two do
-            ttl :timer.hours(1)
+            ttl(:timer.hours(1))
           end
         end
 
         attributes do
-          uuid_primary_key :id
-          attribute :value, :integer
+          uuid_primary_key(:id)
+          attribute(:value, :integer)
         end
-        
+
         calculations do
-          calculate :calc_one, :integer, expr(value * 2)
-          calculate :calc_two, :integer, expr(value * 3)
+          calculate(:calc_one, :integer, expr(value * 2))
+          calculate(:calc_two, :integer, expr(value * 3))
         end
       end
 
@@ -67,22 +67,22 @@ defmodule AshMemo.ResourceTest do
           extensions: [AshMemo.Resource]
 
         memo do
-          cache_calculation :default_ttl_calc
+          cache_calculation(:default_ttl_calc)
         end
 
         attributes do
-          uuid_primary_key :id
-          attribute :value, :integer
+          uuid_primary_key(:id)
+          attribute(:value, :integer)
         end
-        
+
         calculations do
-          calculate :default_ttl_calc, :integer, expr(value + 1)
+          calculate(:default_ttl_calc, :integer, expr(value + 1))
         end
       end
 
       cached_calcs = AshMemo.Info.cached_calculations(DefaultTTLResource)
       [cache_calc] = cached_calcs
-      
+
       # Default TTL is nil (no expiration)
       assert cache_calc.ttl == nil
     end
@@ -96,23 +96,23 @@ defmodule AshMemo.ResourceTest do
 
         memo do
           cache_calculation :nil_ttl_calc do
-            ttl nil
+            ttl(nil)
           end
         end
 
         attributes do
-          uuid_primary_key :id
-          attribute :value, :integer
+          uuid_primary_key(:id)
+          attribute(:value, :integer)
         end
-        
+
         calculations do
-          calculate :nil_ttl_calc, :integer, expr(value - 1)
+          calculate(:nil_ttl_calc, :integer, expr(value - 1))
         end
       end
 
       cached_calcs = AshMemo.Info.cached_calculations(NilTTLResource)
       [cache_calc] = cached_calcs
-      
+
       assert cache_calc.ttl == nil
     end
   end

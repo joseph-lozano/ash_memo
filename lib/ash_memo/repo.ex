@@ -11,11 +11,11 @@ defmodule AshMemo.Repo do
     case Ash.Resource.Info.data_layer(resource) do
       AshPostgres.DataLayer ->
         AshPostgres.DataLayer.Info.repo(resource)
-      
+
       other ->
         raise """
         AshMemo only supports resources using AshPostgres.DataLayer.
-        
+
         Resource #{inspect(resource)} is using #{inspect(other)}.
         """
     end

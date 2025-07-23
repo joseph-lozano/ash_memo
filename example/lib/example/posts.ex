@@ -3,8 +3,8 @@ defmodule Example.Posts do
 
   resources do
     resource Example.Posts.Post do
-      define :create_post, action: :create
-      define :get_post, action: :read, get_by: [:id]
+      define(:create_post, action: :create)
+      define(:get_post, action: :read, get_by: [:id])
     end
   end
 end
